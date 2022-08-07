@@ -12,3 +12,6 @@ Once you have python (and pip) downloaded, you can run these commands in your Co
 Fill in your credentials, and other parameters in the `config.py` file.  
 In your Command Prompt (or Terminal), you can automatically download pictures / fetch video urls from specified users as follows:  
 `python twitter_download.py`
+
+##Extras
+This is an extra from a friend of mine, where you can download media from people you follow and people you specified in USERS.
