@@ -107,7 +107,7 @@ def download_images(photo_urls, output_folder):
         # Only download if picture hasn't been in the folder yet
         file_name = os.path.split(url)[1]
         if not os.path.exists(os.path.join(output_folder, file_name)):
-            wget.download(url +":orig", out = output_folder+'/'+file_name)
+            wget.download(url, out = output_folder+'/'+file_name)
 
 def download_videos(username, video_urls, output_folder, download=False):
     if download == False:
