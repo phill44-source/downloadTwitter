@@ -1,11 +1,11 @@
 import os, sys
+import re
 import tweepy
 import wget
 import pandas as pd
 import numpy as np
 
 from config import *
-
 # API's setup
 def twitter_setup():
     CONSUMER_KEY    = CREDENTIALS['CONSUMER_KEY']
@@ -20,7 +20,16 @@ def twitter_setup():
 
     # Return API with authentication
     api = tweepy.API(auth)
+    print("twitter_setup started")
     return api
+
+def fetch_friends():
+    api = twitter_setup()
+    friends = []
+    for foll_user in FOLLOWER_USER:
+        for user in tweepy.Cursor(api.get_friends, screen_name=foll_user).items():
+            friends.append(user.screen_name)
+    return friends        
 
 def get_all_tweets(screen_name, count, extend):
     '''
@@ -37,30 +46,29 @@ def get_all_tweets(screen_name, count, extend):
                                     tweet_mode='extended', include_rts=False, exclude_replies=True)
     #save most recent tweets
     alltweets.extend(new_tweets)
-
+    print("alltweets.extended")
     #save the id of the oldest tweet less one
     oldest = alltweets[-1].id - 1
-
     if extend==True:
         #keep grabbing tweets until there are no tweets left to grab
         while len(new_tweets) > 0:
             print("getting tweets before %s" % (oldest))
-
+            
             #all subsiquent requests use the max_id param to prevent duplicates
             new_tweets = api.user_timeline(screen_name = screen_name,count=count,
                                             tweet_mode='extended', include_rts=False,
                                             exclude_replies=True, max_id=oldest)
-
+            
             #save most recent tweets
             alltweets.extend(new_tweets)
 
             #update the id of the oldest tweet minus one
             oldest = alltweets[-1].id - 1
 
-            print("...%s tweets fetched so far" % (len(alltweets)))
+            print(f"...{len(alltweets)} /3240 of {screen_name}'s tweets fetched so far")
 
     else:
-        print("...%s tweets fetched!" % (len(alltweets)))
+        print(f"...{len(alltweets)} /3240 of {screen_name}'s tweets fetched!")
 
     return alltweets
 
@@ -68,6 +76,7 @@ def get_media(tweets, type):
     '''
     Get all urls of user's photos/videos
     '''
+    
     photos = set()
     videos = set()
     for status in tweets:
@@ -126,16 +135,22 @@ def download_videos(username, video_urls, output_folder, download=False):
 
 def main():
     url_type = FILE_TYPE
+    friends_in_users = fetch_friends()
+    for UsEr in USERS:
+        friends_in_users.append(UsEr)
 
-    for name in USERS:
+    for name in friends_in_users:
         outdir = name+'_download'
         print("Fetching tweets for user %s......." % name)
 
+        print()
         # set extend to False if you don't want to fetch tweets continuously
         tweets = get_all_tweets(name, N_TWEETS, extend=EXTEND_STATE)
 
         urls = get_media(tweets, type=url_type)
-
+            
+            
+            
         if url_type == 'photo':
             download_images(urls, outdir)
             print("Photo download complete!")
@@ -144,3 +159,4 @@ def main():
 
 if __name__=='__main__':
     main()
+
